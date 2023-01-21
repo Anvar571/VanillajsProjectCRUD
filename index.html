@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <!-- <meta http-equiv="Content-Security-Policy" content="font-src 'self' data:; img-src 'self' data:; default-src 'self' http://121.0.0:3000/"> -->
-    
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- local css -->
@@ -43,9 +43,19 @@
     <div id="spa" class="products">
 
     </div>
+    <div class=" product-config">
+        <div class="container  d-flex justify-content-center align-items-center">
+            <div class="timer d-flex">
+                <h4 class="p-1">Hour: <span id="hour">20</span></h4>
+                <h4 class="p-1">Min: <span id="min">23</span></h4>
+                <h4 class="p-1">Sec: <span id="sec">43</span></h4>
+            </div>
+        </div>
+    </div>
     <!-- <script src="./app/app.js" type="module"></script> -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" defer></script>
     <script src="./render.js"></script>
+    <script src="./products/time.js"></script>
 </body>
 
 </html>
