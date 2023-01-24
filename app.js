@@ -7,124 +7,132 @@ const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im
 const digitRegex = /^\d+$/;
 
 // -------------------------------------------------- //
+// birinchi variablelarni olib kelib olamiz
+const addBtn = document.getElementById("add-btn");
+const fullscreenDiv = document.getElementById("fullscreen-div");
+const form = document.getElementById("modal");
+const modalBtns = document.getElementById("modal-btns");
+const modal = document.querySelector(".modal");
+const closeBtn = document.getElementById("close-btn");
+const productView = document.getElementById("addr-book");
+const searchInput = document.getElementById("search-input");
+const productList = document.querySelector("tbody");
 
-const countryList = document.getElementById('country-list');
-const fullscreenDiv = document.getElementById('fullscreen-div');
-const modal = document.getElementById('modal');
-const addBtn = document.getElementById('add-btn');
-const closeBtn = document.getElementById('close-btn');
-const modalBtns = document.getElementById('modal-btns');
-const form = document.getElementById('modal');
-const addrBookList = document.querySelector('#addr-book-list tbody');
 
-// -------------------------------------------------- //
-let addrName = firstName = lastName = email = phone = streetAddr = postCode = city = country = labels = "";
+let inputSearch = '';
+let proName = proPrice = proYear = proDesc = category = "";
 
-// Address class
-class Address {
-    constructor(id, addrName, firstName, lastName, email, phone, streetAddr, postCode, city, country, labels) {
-        this.id = id;
-        this.addrName = addrName;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.phone = phone;
-        this.streetAddr = streetAddr;
-        this.postCode = postCode;
-        this.city = city;
-        this.country = country;
-        this.labels = labels;
+
+class Product {
+    constructor(productId, name, price, year, description) {
+        this.productId = productId;
+        this.name = name;
+        this.price = price;
+        this.year = year;
+        this.description = description;
+        this.timeStamp = new Date().toString().slice(16, 24);
     }
 
-    static getAddresses() {
-        // from local storage
-        let addresses;
-        if (localStorage.getItem('addresses') == null) {
-            addresses = [];
+    static getProducts() {
+        let productsArr = [];
+
+        if (localStorage.getItem("products") == null) {
+            productsArr = []
         } else {
-            addresses = JSON.parse(localStorage.getItem('addresses'));
+            productsArr = JSON.parse(localStorage.getItem("products"))
         }
-        return addresses;
+        return productsArr
     }
 
-    static addAddress(address) {
-        const addresses = Address.getAddresses();
-        addresses.push(address);
-        localStorage.setItem('addresses', JSON.stringify(addresses));
+    static addProduct(product) {
+        const newProduct = Product.getProducts();
+        newProduct.push(product)
+        localStorage.setItem("products", JSON.stringify(newProduct))
+    }
+
+    static searchArrInput() {
+        searchInput.addEventListener("input", (e) => {
+            inputSearch = e.target.value.toLowerCase();
+            UI.renderProduct();
+        })
+    }
+
+    static update(item) {
+        const product = Product.getProducts();
+        product.forEach(address => {
+            if (address.id == item.id) {
+                address.description = item.description;
+                address.name = item.name;
+                address.price = item.price;
+                address.year = item.year;
+                address.category = item.category;
+            }
+        });
+
+        localStorage.setItem('products', JSON.stringify(product));
+        UI.showAllProducts();
+
     }
 
     static deleteAddress(id) {
-        const addresses = Address.getAddresses();
-        addresses.forEach((address, index) => {
-            if (address.id == id) {
-                addresses.splice(index, 1);
+        const product = Product.getProducts();
+        product.forEach((val, ind) => {
+            if (val.productId == id) {
+                product.splice(ind, 1)
             }
         });
-        localStorage.setItem('addresses', JSON.stringify(addresses));
+        localStorage.setItem('products', JSON.stringify(product));
+        UI.closeModal()
         form.reset();
-        UI.closeModal();
-        addrBookList.innerHTML = "";
-        UI.showAddressList();
-    }
-
-    static updateAddress(item) {
-        const addresses = Address.getAddresses();
-        addresses.forEach(address => {
-            if (address.id == item.id) {
-                address.addrName = item.addrName;
-                address.firstName = item.firstName;
-                address.lastName = item.lastName;
-                address.email = item.email;
-                address.phone = item.phone;
-                address.streetAddr = item.streetAddr;
-                address.postCode = item.postCode;
-                address.city = item.city;
-                address.country = item.country;
-                address.labels = item.labels;
-            }
-        });
-        localStorage.setItem('addresses', JSON.stringify(addresses));
-        addrBookList.innerHTML = "";
-        UI.showAddressList();
+        UI.showAllProducts();
     }
 }
 
-// UI class
 class UI {
-    static showAddressList() {
-        const addresses = Address.getAddresses();
-        addresses.forEach(address => UI.addToAddressList(address));
+    static showModal() {
+        modal.style.display = "block";
+        productView.style.display = "none"
     }
 
-    static addToAddressList(address) {
+    static closeModal() {
+        modal.style.display = "none";
+        productView.style.display = "block"
+    }
+
+    static showAllProducts() {
+        const products = Product.getProducts();
+
+        products.forEach(data => UI.genereateProduct(data))
+    }
+
+    static genereateProduct(productObj) {
+        let { productId, name, price, year, description } = productObj;
+
         const tableRow = document.createElement('tr');
-        tableRow.setAttribute('data-id', address.id);
+
+        tableRow.setAttribute('data-id', productId);
         tableRow.innerHTML = `
-            <td>${address.id}</td>
-            <td>
-                <span class = "addressing-name">${address.addrName}</span><br><span class = "address">${address.streetAddr} ${address.postCode} ${address.city} ${address.country}</span>
-            </td>
-            <td><span>${address.labels}</span></td>
-            <td>${address.firstName + " " + address.lastName}</td>
-            <td>${address.phone}</td>
+            <td>${productId}</td>
+            <td>${name}</td>
+            <td><span>${year}</span></td>
+            <td>${price}</td>
+            <td>${description}</td>
+            <td>${new Date()}</td>
         `;
-        addrBookList.appendChild(tableRow);
+
+        productList.appendChild(tableRow);
     }
 
     static showModalData(id) {
-        const addresses = Address.getAddresses();
-        addresses.forEach(address => {
-            if (address.id == id) {
-                form.addr_ing_name.value = address.addrName;
-                form.first_name.value = address.firstName;
-                form.last_name.value = address.lastName;
-                form.email.value = address.email;
-                form.phone.value = address.phone;
-                form.street_addr.value = address.streetAddr;
-                form.postal_code.value = address.postCode;
-                form.city.value = address.city;
-                form.country.value = address.country;
-                form.labels.value = address.labels;
+        const addresses = Product.getProducts();
+
+        addresses.forEach(product => {
+            if (product.productId == id) {
+                form.product_dscr.value = product.description;
+                form.product_name.value = product.name;
+                form.product_price.value = product.price;
+                form.product_year.value = product.year;
+
                 document.getElementById('modal-title').innerHTML = "Change Address Details";
 
                 document.getElementById('modal-btns').innerHTML = `
@@ -134,71 +142,58 @@ class UI {
             }
         });
     }
-
-    static showModal() {
-        modal.style.display = "block";
-        fullscreenDiv.style.display = "block";
-    }
-
-    static closeModal() {
-        modal.style.display = "none";
-        fullscreenDiv.style.display = "none";
-    }
-
 }
 
-// DOM Content Loaded
 window.addEventListener('DOMContentLoaded', () => {
-    loadJSON(); // loading country list from json file
-    eventListeners();
-    UI.showAddressList();
-});
+    // js yuklanganda ichidagi functionlar ishlaydi
+    eventHandler();
+    UI.showAllProducts();
+})
 
-// event listeners
-function eventListeners() {
-    // show add item modal
-    addBtn.addEventListener('click', () => {
-        form.reset();
-        document.getElementById('modal-title').innerHTML = "Add Address";
-        UI.showModal();
-        document.getElementById('modal-btns').innerHTML = `
+// varcha eventlar shu yerda bajariladi
+function eventHandler() {
+    // show modal
+    addBtn.addEventListener("click", () => {
+        UI.showModal()
+        document.getElementById("modal-btns").innerHTML = `
             <button type = "submit" id = "save-btn"> Save </button>
-        `;
-    });
+        `
+    })
 
-    // close add item modal
-    closeBtn.addEventListener('click', UI.closeModal);
+    // close modal
+    closeBtn.addEventListener("click", () => {
+        UI.closeModal()
+    })
 
-    // add an address item
-    modalBtns.addEventListener('click', (event) => {
-        event.preventDefault();
-        if (event.target.id == "save-btn") {
-            let isFormValid = getFormData();
-            if (!isFormValid) {
+    modalBtns.addEventListener("click", (e) => {
+        e.preventDefault()
+
+        if (e.target.id == "save-btn") {
+            let isValidation = validationData();
+            if (!isValidation) {
                 form.querySelectorAll('input').forEach(input => {
                     setTimeout(() => {
                         input.classList.remove('errorMsg');
                     }, 1500);
                 });
             } else {
-                let allItem = Address.getAddresses();
-                let lastItemId = (allItem.length > 0) ? allItem[allItem.length - 1].id : 0;
-                lastItemId++;
+                const allProduct = Product.getProducts();
+                let productLength = (allProduct.length > 0) ? allProduct[allProduct.length - 1].productId : 0;
+                productLength++;
 
-                const addressItem = new Address(lastItemId, addrName, firstName, lastName, email, phone, streetAddr, postCode, city, country, labels);
-                Address.addAddress(addressItem);
-                UI.closeModal();
-                UI.addToAddressList(addressItem);
-                form.reset();
+                const allItem = new Product(productLength, proName, proPrice, proYear, proDesc);
+                Product.addProduct(allItem)
+                UI.closeModal()
+                UI.genereateProduct(allItem);
             }
         }
-    });
+    })
 
-    // table row items
-    addrBookList.addEventListener('click', (event) => {
+    productList.addEventListener("click", (event) => {
         UI.showModal();
         let trElement;
         if (event.target.parentElement.tagName == "TD") {
+            console.log("td");
             trElement = event.target.parentElement.parentElement;
         }
 
@@ -207,22 +202,20 @@ function eventListeners() {
         }
 
         let viewID = trElement.dataset.id;
-        UI.showModalData(viewID);
-    });
+        UI.showModalData(viewID)
+    })
 
-    // delete an address item
     modalBtns.addEventListener('click', (event) => {
         if (event.target.id == 'delete-btn') {
-            Address.deleteAddress(event.target.dataset.id);
+            Product.deleteAddress(event.target.dataset.id);
         }
     });
 
-    // update an address item
-    modalBtns.addEventListener('click', (event) => {
+    modalBtns.addEventListener("click", (event) => {
         event.preventDefault();
         if (event.target.id == "update-btn") {
             let id = event.target.dataset.id;
-            let isFormValid = getFormData();
+            let isFormValid = validationData();
             if (!isFormValid) {
                 form.querySelectorAll('input').forEach(input => {
                     setTimeout(() => {
@@ -230,106 +223,65 @@ function eventListeners() {
                     }, 1500);
                 });
             } else {
-                const addressItem = new Address(id, addrName, firstName, lastName, email, phone, streetAddr, postCode, city, country, labels);
-                Address.updateAddress(addressItem);
+                const addressItem = new Product(id, proName, proPrice, proYear, proDesc);
+                Product.update(addressItem);
                 UI.closeModal();
                 form.reset();
             }
         }
-    });
+    })
 }
 
-
-// load countries list
-function loadJSON() {
+function fetchData() {
     fetch('country.json')
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             let html = "";
             data.forEach(country => {
                 html += `
-                <option> ${country.country} </option>
-            `;
-            });
-            countryList.innerHTML = html;
+                <option>${country.year}</option>
+            `
+            })
+            countryYear.innerHTML = html
         })
 }
 
-
-// get form data
-function getFormData() {
-    let inputValidStatus = [];
-    // console.log(form.addr_ing_name.value, form.first_name.value, form.last_name.value, form.email.value, form.phone.value, form.street_addr.value, form.postal_code.value, form.city.value, form.country.value, form.labels.value);
-
-    if (!strRegex.test(form.addr_ing_name.value) || form.addr_ing_name.value.trim().length == 0) {
-        addErrMsg(form.addr_ing_name);
-        inputValidStatus[0] = false;
-    } else {
-        addrName = form.addr_ing_name.value;
-        inputValidStatus[0] = true;
-    }
-
-    if (!strRegex.test(form.first_name.value) || form.first_name.value.trim().length == 0) {
-        addErrMsg(form.first_name);
-        inputValidStatus[1] = false;
-    } else {
-        firstName = form.first_name.value;
-        inputValidStatus[1] = true;
-    }
-
-    if (!strRegex.test(form.last_name.value) || form.last_name.value.trim().length == 0) {
-        addErrMsg(form.last_name);
-        inputValidStatus[2] = false;
-    } else {
-        lastName = form.last_name.value;
-        inputValidStatus[2] = true;
-    }
-
-    if (!emailRegex.test(form.email.value)) {
-        addErrMsg(form.email);
-        inputValidStatus[3] = false;
-    } else {
-        email = form.email.value;
-        inputValidStatus[3] = true;
-    }
-
-    if (!phoneRegex.test(form.phone.value)) {
-        addErrMsg(form.phone);
-        inputValidStatus[4] = false;
-    } else {
-        phone = form.phone.value;
-        inputValidStatus[4] = true;
-    }
-
-    if (!(form.street_addr.value.trim().length > 0)) {
-        addErrMsg(form.street_addr);
-        inputValidStatus[5] = false;
-    } else {
-        streetAddr = form.street_addr.value;
-        inputValidStatus[5] = true;
-    }
-
-    if (!digitRegex.test(form.postal_code.value)) {
-        addErrMsg(form.postal_code);
-        inputValidStatus[6] = false;
-    } else {
-        postCode = form.postal_code.value;
-        inputValidStatus[6] = true;
-    }
-
-    if (!strRegex.test(form.city.value) || form.city.value.trim().length == 0) {
-        addErrMsg(form.city);
-        inputValidStatus[7] = false;
-    } else {
-        city = form.city.value;
-        inputValidStatus[7] = true;
-    }
-    country = form.country.value;
-    labels = form.labels.value;
-    return inputValidStatus.includes(false) ? false : true;
+function updateLocalStorage(arr) {
+    let newJsonData = JSON.stringify(arr);
+    localStorage("product", newJsonData);
 }
 
+function validationData() {
+    let allError = []
 
-function addErrMsg(inputBox) {
-    inputBox.classList.add('errorMsg');
+    if (!digitRegex.test(form.product_year.value)) {
+        addError(form.product_year);
+        allError[0] = false;
+    } else {
+        proYear = form.product_year.value;
+        allError[0] = true
+    }
+
+    if (form.product_price.value.trim().length == 0) {
+        addError(form.product_price);
+        allError[1] = false;
+    } else {
+        proPrice = form.product_price.value;
+        allError[1] = true
+    }
+
+    if (form.product_name.value.length == 0) {
+        addError(form.product_name);
+    } else {
+        proName = form.product_name.value
+    }
+
+    category = form.category.value;
+    proDesc = form.product_dscr.value;
+
+    return allError.includes(false) ? false : true;
+}
+
+function addError(inputError) {
+    inputError.classList.add("errorMsg")
 }
