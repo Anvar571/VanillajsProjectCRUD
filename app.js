@@ -1,11 +1,4 @@
 
-// regular expression for validation
-const strRegex = /^[a-zA-Z\s]*$/; // containing only letters
-const emailRegex = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-const phoneRegex = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
-/* supports following number formats - (123) 456-7890, (123)456-7890, 123-456-7890, 123.456.7890, 1234567890, +31636363634, 075-63546725 */
-const digitRegex = /^\d+$/;
-
 // -------------------------------------------------- //
 // birinchi variablelarni olib kelib olamiz
 const addBtn = document.getElementById("add-btn");
@@ -19,9 +12,9 @@ const searchInput = document.getElementById("search-input");
 const productList = document.querySelector("tbody");
 
 
-let inputSearch = '';
+let inputSearch = 'mi';
 let proName = proPrice = proYear = proDesc = category = "";
-
+let productArr = [];
 
 class Product {
     constructor(productId, name, price, year, description) {
@@ -34,32 +27,26 @@ class Product {
     }
 
     static getProducts() {
-        let productsArr = [];
-
         if (localStorage.getItem("products") == null) {
-            productsArr = []
+            productArr = []
         } else {
-            productsArr = JSON.parse(localStorage.getItem("products"))
+            productArr = JSON.parse(localStorage.getItem("products"))
         }
-        return productsArr
     }
 
     static addProduct(product) {
-        const newProduct = Product.getProducts();
-        newProduct.push(product)
-        localStorage.setItem("products", JSON.stringify(newProduct))
-    }
+        Product.getProducts();
 
-    static searchArrInput() {
-        searchInput.addEventListener("input", (e) => {
-            inputSearch = e.target.value.toLowerCase();
-            UI.renderProduct();
-        })
+        productArr.push(product)
+        localStorage.setItem("products", JSON.stringify(productArr))
     }
 
     static update(item) {
-        const product = Product.getProducts();
-        product.forEach(address => {
+        Product.getProducts()
+
+        // const product = Product.getProducts();
+
+        productArr.forEach(address => {
             if (address.id == item.id) {
                 address.description = item.description;
                 address.name = item.name;
@@ -69,19 +56,24 @@ class Product {
             }
         });
 
-        localStorage.setItem('products', JSON.stringify(product));
+        localStorage.setItem('products', JSON.stringify(productArr));
         UI.showAllProducts();
 
     }
 
+    static productSort(){
+
+    }
+
     static deleteAddress(id) {
-        const product = Product.getProducts();
-        product.forEach((val, ind) => {
+        Product.getProducts();
+
+        productArr.forEach((val, ind) => {
             if (val.productId == id) {
-                product.splice(ind, 1)
+                productArr.splice(ind, 1)
             }
         });
-        localStorage.setItem('products', JSON.stringify(product));
+        localStorage.setItem('products', JSON.stringify(productArr));
         UI.closeModal()
         form.reset();
         UI.showAllProducts();
@@ -99,10 +91,20 @@ class UI {
         productView.style.display = "block"
     }
 
-    static showAllProducts() {
-        const products = Product.getProducts();
+    static filterData(){
+        Product.getProducts();
+        
+        if (inputSearch.length == 0){
+            return productArr;
+        }
 
-        products.forEach(data => UI.genereateProduct(data))
+        return productArr.filter(node => node.name.indexOf(inputSearch) > -1)
+    }
+
+    static showAllProducts() {
+        const arr = UI.filterData();
+        console.log(arr);
+        arr.forEach(data => UI.genereateProduct(data))
     }
 
     static genereateProduct(productObj) {
@@ -124,9 +126,10 @@ class UI {
     }
 
     static showModalData(id) {
-        const addresses = Product.getProducts();
+        Product.getProducts()
+        // const addresses = Product.getProducts();
 
-        addresses.forEach(product => {
+        productArr.forEach(product => {
             if (product.productId == id) {
                 form.product_dscr.value = product.description;
                 form.product_name.value = product.name;
@@ -147,7 +150,7 @@ class UI {
 window.addEventListener('DOMContentLoaded', () => {
     // js yuklanganda ichidagi functionlar ishlaydi
     eventHandler();
-    UI.showAllProducts();
+    // UI.showAllProducts();
 })
 
 // varcha eventlar shu yerda bajariladi
@@ -177,8 +180,9 @@ function eventHandler() {
                     }, 1500);
                 });
             } else {
-                const allProduct = Product.getProducts();
-                let productLength = (allProduct.length > 0) ? allProduct[allProduct.length - 1].productId : 0;
+                Product.getProducts();
+
+                let productLength = (productArr.length > 0) ? productArr[productArr.length - 1].productId : 0;
                 productLength++;
 
                 const allItem = new Product(productLength, proName, proPrice, proYear, proDesc);
@@ -246,15 +250,10 @@ function fetchData() {
         })
 }
 
-function updateLocalStorage(arr) {
-    let newJsonData = JSON.stringify(arr);
-    localStorage("product", newJsonData);
-}
-
 function validationData() {
     let allError = []
 
-    if (!digitRegex.test(form.product_year.value)) {
+    if (form.product_year.value.length == 0) {
         addError(form.product_year);
         allError[0] = false;
     } else {
@@ -285,3 +284,8 @@ function validationData() {
 function addError(inputError) {
     inputError.classList.add("errorMsg")
 }
+
+searchInput.addEventListener("input", (e) => {
+    inputSearch = e.target.value;
+    UI.showAllProducts();
+})
