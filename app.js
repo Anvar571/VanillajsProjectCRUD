@@ -12,7 +12,7 @@ const searchInput = document.getElementById("search-input");
 const productList = document.querySelector("tbody");
 
 
-let inputSearch = 'mi';
+let inputSearch = '';
 let proName = proPrice = proYear = proDesc = category = "";
 let productArr = [];
 
@@ -62,7 +62,7 @@ class Product {
     }
 
     static productSort(){
-
+        
     }
 
     static deleteAddress(id) {
@@ -73,6 +73,7 @@ class Product {
                 productArr.splice(ind, 1)
             }
         });
+
         localStorage.setItem('products', JSON.stringify(productArr));
         UI.closeModal()
         form.reset();
@@ -81,6 +82,7 @@ class Product {
 }
 
 class UI {
+    
     static showModal() {
         modal.style.display = "block";
         productView.style.display = "none"
@@ -102,8 +104,10 @@ class UI {
     }
 
     static showAllProducts() {
+        productList.innerHTML = "";
+        
         const arr = UI.filterData();
-        console.log(arr);
+
         arr.forEach(data => UI.genereateProduct(data))
     }
 
@@ -150,7 +154,7 @@ class UI {
 window.addEventListener('DOMContentLoaded', () => {
     // js yuklanganda ichidagi functionlar ishlaydi
     eventHandler();
-    // UI.showAllProducts();
+    UI.showAllProducts();
 })
 
 // varcha eventlar shu yerda bajariladi
